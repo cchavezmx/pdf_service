@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.8-bullseye
 # Instalar dependencias del sistema para wkhtmltopdf
 ENV PYTHONUNBUFFERED True
 ENV XDG_RUNTIME_DIR=/tmp/runtime-root

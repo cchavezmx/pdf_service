@@ -39,7 +39,7 @@ class InvoiceData(BaseModel):
     route: str
     kilometer_out: int
     fuel_level: int
-    recorrido_km: int
+    recorrido_km: str
     description: Description
     subtotal_travel: str
 

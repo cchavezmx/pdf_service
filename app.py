@@ -85,7 +85,7 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
 
 
 @app.post("/reporte/pagos/client-maya", response_class=StreamingResponse)
-async def create_invoice(request: Request, invoice_data: InvoiceData):
+async def create_invoice(request: Request, invoice_data: PagosMaya):
     try:        
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         static_files_path = os.path.abspath("static")                         

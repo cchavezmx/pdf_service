@@ -60,7 +60,7 @@ class Pago(BaseModel):
     refBanco: int
     ctaBancaria: int
     banco: str
-class InvoiceData(BaseModel):
+class PagosMaya(BaseModel):
     cliente: Cliente
     proyecto: Proyecto
     lote: Lote

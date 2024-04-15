@@ -1,5 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
+from typing import List
 from typing import Optional
+from datetime import date
 
 class Description(BaseModel):
     link_googlemaps: str
@@ -31,3 +33,37 @@ class InvoiceData(BaseModel):
     recorrido_km: str
     description: Description
     subtotal_travel: str
+
+class Cliente(BaseModel):
+    nombre: str
+    email: EmailStr
+    telefono: Optional[str] = "No Data"
+    direccion: Optional[str] = "No Data"
+
+class Proyecto(BaseModel):
+    titulo: str
+    activo: bool
+
+class Lote(BaseModel):
+    lote_numero: int = Field(..., alias='lote_numero')
+    precio_total: float = Field(..., alias='precio_total')
+    enganche: float
+    financiamiento: float
+    plazo: int
+    mensualidad: float
+    inicio_contrato: date = Field(..., alias='inicio_contrato')
+class Pago(BaseModel):
+    fecha: date
+    folio: int
+    mensualidad: float
+    refPago: str
+    refBanco: int
+    ctaBancaria: int
+    banco: str
+class InvoiceData(BaseModel):
+    cliente: Cliente
+    proyecto: Proyecto
+    lote: Lote
+    pagos: List[Pago]  # Añadir esto
+
+    

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <title>Documentación de Pagos</title>
+</head>
+<body>
+    <div class="text-center mt-4">
+        <img src="{{ static_files_path }}/images/logo.png" alt="Logo" style="width: 150px;"> <!-- Ajusta la ruta y el tamaño según sea necesario -->
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12 text-right">
+                <p>Fecha de generación: <!-- Aquí se colocaría la fecha actual generada dinámicamente --> </p>
+            </div>
+            <div class="col-12">
+                <h2 class="mb-3">Información del Cliente</h2>
+                <p><strong>Nombre:</strong> ALEJANDRA MARTINEZ GARCIA</p>
+                <p><strong>Email:</strong> alejandramartinezgarcia@gmail.com</p>
+                <p><strong>Teléfono:</strong> No Data</p>
+                <p><strong>Dirección:</strong> No Data</p>
+            </div>
+
+            <div class="col-12 mt-4">
+                <h2 class="mb-3">Información del Proyecto</h2>
+                <p><strong>Proyecto:</strong> KUXTAL 6</p>
+                <p><strong>Activo:</strong> Sí</p>
+            </div>
+
+            <div class="col-12 mt-4">
+                <h2 class="mb-3">Información del Lote</h2>
+                <p><strong>Lote Número:</strong> 1</p>
+                <p><strong>Precio Total:</strong> 225,981</p>
+                <p><strong>Enganche:</strong> 22,598</p>
+                <p><strong>Financiamiento:</strong> 203,383</p>
+                <p><strong>Plazo:</strong> 60 meses</p>
+                <p><strong>Mensualidad:</strong> 3,390</p>
+                <p><strong>Inicio del Contrato:</strong> 15 de febrero de 2021</p>
+            </div>
+
+            <div class="col-12 mt-4">
+                <h2 class="mb-3">Documentación de Pagos</h2>
+                <table class="table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Folio</th>
+                            <th>Mensualidad</th>
+                            <th>RefPago</th>
+                            <th>RefBanco</th>
+                            <th>CtaBancaria</th>
+                            <th>Banco</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      {% for pago in pagos %}
+                      <tr>
+                          <td>{{ pago.fecha }}</td>
+                          <td>{{ pago.folio }}</td>
+                          <td>{{ pago.mensualidad }}</td>
+                          <td>{{ pago.refPago }}</td>
+                          <td>{{ pago.refBanco }}</td>
+                          <td>{{ pago.ctaBancaria }}</td>
+                          <td>{{ pago.banco }}</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+                </table>
+            </div>
+
+            <div class="col-12 mt-4">
+                <h3>Suma de Pagos</h3>
+                <p>Total pagado: <!-- Aquí se colocaría el total pagado --> </p>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

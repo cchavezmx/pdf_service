@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 from models.models import *
 import pdfkit
 import os
@@ -77,6 +78,43 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
         })
     except Exception as e:
         # Devuelve una respuesta JSON en caso de error
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Error al generar la factura: {str(e)}"}
+        )
+
+
+@app.post("/reporte/pagos/client-maya", response_class=StreamingResponse)
+async def create_invoice(request: Request, invoice_data: InvoiceData):
+    try:        
+        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        static_files_path = os.path.abspath("static")                         
+        html_content = templates.TemplateResponse("maya/cliente.html", {
+            "request": request,
+            "cliente": invoice_data.cliente,
+            "proyecto": invoice_data.proyecto,
+            "lote": invoice_data.lote,
+            "pagos": invoice_data.pagos,  # Asegúrate de pasar la lista de pagos
+            "fecha_actual": fecha_actual,
+            "static_files_path": f"file://{static_files_path}"
+        }).body.decode("utf-8")
+
+        # Opciones para wkhtmltopdf
+        options = {
+            'enable-local-file-access': None
+        }
+
+        # Convertir el HTML a PDF
+        pdf = pdfkit.from_string(html_content, False, options=options)
+
+        # Envolver el PDF en BytesIO
+        pdf_io = io.BytesIO(pdf)
+
+        # Devolver el PDF como respuesta de flujo
+        return StreamingResponse(pdf_io, media_type="application/pdf", headers={
+            "Content-Disposition": f"attachment; filename=invoice.pdf"
+        })
+    except Exception as e:
         return JSONResponse(
             status_code=500,
             content={"message": f"Error al generar la factura: {str(e)}"}

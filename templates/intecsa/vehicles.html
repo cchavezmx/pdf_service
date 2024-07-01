@@ -181,6 +181,26 @@
       .recorrido {
         margin-top: 300px;
       }
+
+      .invoice_cancel{
+        font-weight: 900;
+        width: 100%;
+        border: 1px solid red;
+        font-size: 1.20rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .invoice_cancel strong{
+        color: red;
+        margin-right: 10px;
+      }
+
+      .invoice_cancel p{
+        margin: 0;
+        padding: 0;
+      }
     </style>
   </head>
   <body>
@@ -227,6 +247,12 @@
                   </div>
                 </div>
               </div>
+                {% if details.isCancel_status %}
+                  <div class="invoice_cancel">
+                    <strong>Documento Cancelado:</strong>
+                    <p>Motivo: {{ details.isCancel_status }}</p>
+                  </div>
+                {% endif %}
               <div class="invoice-bottom">
                 <div class="row">
                   <div class="col-12"></div>

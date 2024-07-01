@@ -33,6 +33,7 @@ class InvoiceData(BaseModel):
     recorrido_km: str
     description: Description
     subtotal_travel: str
+    isCancel_status: str
 
 class Cliente(BaseModel):
     nombre: str

@@ -67,4 +67,14 @@ class PagosMaya(BaseModel):
     lote: Lote
     pagos: List[Pago]  # Añadir esto
 
-    
+class Paqueteria(BaseModel):
+    proyecto: str
+    paqueteria: str
+    direccion: str
+    contacto: str
+    numeroContacto: str
+    empresaEnvio: str
+    contacto_recibe: str
+    numeroContacto_recibe: str
+    createdAt: str
+

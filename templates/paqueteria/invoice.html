@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recibo de Envío</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        /*/* rotar la página */
+        ;
+        */
+        /*transform: rotate(90deg);*/
+        width: 19cm;
+        height: 12cm;
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .header {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+      }
+
+      .content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .section {
+        margin-bottom: 10px;
+      }
+
+      .section-title {
+        font-weight: bold;
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 5px;
+      }
+
+      .info p {
+        margin: 0;
+        font-size: 13px;
+        color: #333;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: #555;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">Solicitudes de Envío Paquetería GRUPO INTECSA</div>
+
+      <div class="content">
+        <div class="section">
+          <div class="section-title">Información del Proyecto:</div>
+          <div class="info">
+            <p><strong>Proyecto:</strong> {{ proyecto }}</p>
+            <p><strong>Paquetería:</strong> {{ paqueteria }}</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Dirección de Envío:</div>
+          <div class="info">
+            <p>{{ direccion }}</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Contacto de Envío:</div>
+          <div class="info">
+            <p><strong>Nombre:</strong> {{ contacto }}</p>
+            <p><strong>Teléfono:</strong> {{ numeroContacto }}</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Contacto del Destinatario:</div>
+          <div class="info">
+            <p><strong>Nombre:</strong> {{ contacto_recibe }}</p>
+            <p><strong>Teléfono:</strong> {{ numeroContacto_recibe }}</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Empresa de Envío:</div>
+          <div class="info">
+            <p><strong>ID:</strong> {{ empresaEnvio }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Recibo generado el <strong>{{ fecha }}</strong>. Solicitud creada el
+        <strong>{{ createdAt }}</strong>.
+      </div>
+    </div>
+  </body>
+</html>

@@ -119,3 +119,39 @@ async def create_invoice(request: Request, invoice_data: PagosMaya):
             status_code=500,
             content={"message": f"Error al generar la factura: {str(e)}"}
         )
+
+@app.post("/reporte/paqueteria", response_class=StreamingResponse)
+async def create_invoice(request: Request, invoice_data: Paqueteria):
+    try: 
+        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        static_files_path = os.path.abspath("static")
+        html_content = templates.TemplateResponse("paqueteria/invoice.html", {
+            "request": request,
+            "proyecto": invoice_data.proyecto,
+            "paqueteria": invoice_data.paqueteria,
+            "direccion": invoice_data.direccion,
+            "contacto": invoice_data.contacto,
+            "numeroContacto": invoice_data.numeroContacto,
+            "empresaEnvio": invoice_data.empresaEnvio,
+            "contacto_recibe": invoice_data.contacto_recibe,
+            "numeroContacto_recibe": invoice_data.numeroContacto_recibe,
+            "fecha": fecha_actual,
+            "createdAt": invoice_data.createdAt,
+            "static_files_path": f"file://{static_files_path}"
+        }).body.decode("utf-8")
+
+        options = {
+            'enable-local-file-access': None
+        }
+
+        pdf = pdfkit.from_string(html_content, False, options=options)
+        pdf_io = io.BytesIO(pdf)
+
+        return StreamingResponse(pdf_io, media_type="application/pdf", headers={
+            "Content-Disposition": f"attachment; filename=invoice.pdf"
+        })
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Error al generar la factura: {str(e)}"}
+        )

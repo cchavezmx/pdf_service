@@ -10,7 +10,10 @@ from models.models import *
 import pdfkit
 import os
 import io
+from io import BytesIO
+import base64
 from typing import Optional
+import qrcode
 
 
 app = FastAPI()
@@ -125,6 +128,23 @@ async def create_invoice(request: Request, invoice_data: Paqueteria):
     try: 
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         static_files_path = os.path.abspath("static")
+
+        # Generar el código QR
+        order_id = invoice_data.id
+        baser_url = "https://control-fletes.vercel.app/paqueterita/attempt/"
+        dynamic_url = f"{baser_url}/{order_id}"
+
+        # Generar el QR a partir de la URL
+        qr = qrcode.QRCode(box_size=10, border=4)
+        qr.add_data(dynamic_url)
+        qr.make(fit=True)
+
+        # Guardar el QR como imagen en memoria
+        qr_img = BytesIO()
+        qr.make_image(fill="black", back_color="white").save(qr_img, format="PNG")
+        qr_img_base64 = base64.b64encode(qr_img.getvalue()).decode('utf-8')
+        qr_img.close()
+        
         html_content = templates.TemplateResponse("paqueteria/invoice.html", {
             "request": request,
             "proyecto": invoice_data.proyecto,
@@ -137,7 +157,8 @@ async def create_invoice(request: Request, invoice_data: Paqueteria):
             "numeroContacto_recibe": invoice_data.numeroContacto_recibe,
             "fecha": fecha_actual,
             "createdAt": invoice_data.createdAt,
-            "static_files_path": f"file://{static_files_path}"
+            "static_files_path": f"file://{static_files_path}",
+            "qr_code": f"data:image/png;base64,{qr_img_base64}"
         }).body.decode("utf-8")
 
         options = {

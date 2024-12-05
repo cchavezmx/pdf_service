@@ -68,6 +68,7 @@ class PagosMaya(BaseModel):
     pagos: List[Pago]  # Añadir esto
 
 class Paqueteria(BaseModel):
+    id: str
     proyecto: str
     paqueteria: str
     direccion: str

@@ -3,6 +3,7 @@ from typing import List
 from typing import Optional
 from datetime import date
 
+
 class Description(BaseModel):
     link_googlemaps: str
     document_id: str
@@ -10,12 +11,14 @@ class Description(BaseModel):
     planDescription: str
     planPrice: str
 
+
 class VehicleInfo(BaseModel):
     name: str
     placas: str
     driver: str
     fuel_card: str
     fuel_amount: str
+
 
 class InvoiceData(BaseModel):
     type: str
@@ -35,15 +38,18 @@ class InvoiceData(BaseModel):
     subtotal_travel: str
     isCancel_status: str
 
+
 class Cliente(BaseModel):
     nombre: str
     email: EmailStr
     telefono: Optional[str] = "No Data"
     direccion: Optional[str] = "No Data"
 
+
 class Proyecto(BaseModel):
     titulo: str
     activo: bool
+
 
 class Lote(BaseModel):
     lote_numero: int = Field(..., alias='lote_numero')
@@ -53,6 +59,8 @@ class Lote(BaseModel):
     plazo: int
     mensualidad: float
     inicio_contrato: date = Field(..., alias='inicio_contrato')
+
+
 class Pago(BaseModel):
     fecha: date
     folio: int
@@ -61,11 +69,14 @@ class Pago(BaseModel):
     refBanco: int
     ctaBancaria: int
     banco: str
+
+
 class PagosMaya(BaseModel):
     cliente: Cliente
     proyecto: Proyecto
     lote: Lote
     pagos: List[Pago]  # Añadir esto
+
 
 class Paqueteria(BaseModel):
     id: str
@@ -81,4 +92,3 @@ class Paqueteria(BaseModel):
     emailContacto: str
     createdAt: str
     codigo: str
-

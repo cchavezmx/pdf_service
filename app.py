@@ -21,12 +21,13 @@ templates = Jinja2Templates(directory="templates")
 # Asegúrate de montar el directorio estático de FastAPI
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 @app.post("/generate-invoice/")
 async def generate_invoice(request: Request, details: dict, items: dict):
     try:
         # Construye la ruta absoluta al archivo estático que necesitas
         static_files_path = os.path.abspath("static")
-        
+
         # Añade la ruta al contexto para usarla en la plantilla
         context = {
             "request": request,
@@ -34,9 +35,10 @@ async def generate_invoice(request: Request, details: dict, items: dict):
             "items": items,
             "static_files_path": f"file://{static_files_path}"
         }
-        
+
         # Renderiza la plantilla HTML con los datos proporcionados
-        html_content = templates.TemplateResponse("factura/index.html", context).body.decode("utf-8")
+        html_content = templates.TemplateResponse(
+            "factura/index.html", context).body.decode("utf-8")
 
         # Opciones para permitir el acceso a archivos locales en wkhtmltopdf
         options = {
@@ -50,18 +52,20 @@ async def generate_invoice(request: Request, details: dict, items: dict):
         return Response(content=pdf, media_type="application/pdf")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @app.post("/vehicle-invoice/", response_class=StreamingResponse)
 async def create_invoice(request: Request, invoice_data: InvoiceData):
     try:
-                
+
         # Actualizar la fecha en los datos de la factura
-        invoice_data_dict = invoice_data.dict(by_alias=True)        
-        
+        invoice_data_dict = invoice_data.dict(by_alias=True)
+
         # Renderizar la plantilla HTML con los datos proporcionados
         html_content = templates.TemplateResponse("intecsa/vehicles.html", {
             "request": request,
-            "details": invoice_data_dict  # Usar el diccionario actualizado con la fecha formateada
+            # Usar el diccionario actualizado con la fecha formateada
+            "details": invoice_data_dict
         }).body.decode("utf-8")
 
         # Opciones para permitir el acceso a archivos locales en wkhtmltopdf
@@ -89,9 +93,9 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
 
 @app.post("/reporte/pagos/client-maya", response_class=StreamingResponse)
 async def create_invoice(request: Request, invoice_data: PagosMaya):
-    try:        
+    try:
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        static_files_path = os.path.abspath("static")                         
+        static_files_path = os.path.abspath("static")
         html_content = templates.TemplateResponse("maya/cliente.html", {
             "request": request,
             "cliente": invoice_data.cliente,
@@ -123,9 +127,10 @@ async def create_invoice(request: Request, invoice_data: PagosMaya):
             content={"message": f"Error al generar la factura: {str(e)}"}
         )
 
+
 @app.post("/reporte/paqueteria", response_class=StreamingResponse)
 async def create_invoice(request: Request, invoice_data: Paqueteria):
-    try: 
+    try:
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         static_files_path = os.path.abspath("static")
 
@@ -141,10 +146,11 @@ async def create_invoice(request: Request, invoice_data: Paqueteria):
 
         # Guardar el QR como imagen en memoria
         qr_img = BytesIO()
-        qr.make_image(fill="black", back_color="white").save(qr_img, format="PNG")
+        qr.make_image(fill="black", back_color="white").save(
+            qr_img, format="PNG")
         qr_img_base64 = base64.b64encode(qr_img.getvalue()).decode('utf-8')
         qr_img.close()
-        
+
         html_content = templates.TemplateResponse("paqueteria/invoice.html", {
             "request": request,
             "proyecto": invoice_data.proyecto,

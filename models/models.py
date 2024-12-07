@@ -77,5 +77,8 @@ class Paqueteria(BaseModel):
     empresaEnvio: str
     contacto_recibe: str
     numeroContacto_recibe: str
+    contacto_recibe_email: str
+    emailContacto: str
     createdAt: str
+    codigo: str
 

@@ -1,0 +1,23 @@
+POST /reporte/paqueteria HTTP/1.1
+Host: localhost:8000
+Content-Type: application/json
+Content-Length: 629
+
+{
+    "id": "674f2e8e0ab08156af41c59e",
+    "_id": "674f2e8e0ab08156af41c59e",
+    "is_active": true,
+    "proyecto": "GUADALAJARA",
+    "paqueteria": "ups",
+    "direccion": "Emiliano Zapata 32, Lomas de Zaragoza, Iztapalapa, 09620 Ciudad de México, CDMX, México",
+    "contacto": "Carlos",
+    "numeroContacto": "5524097656",
+    "empresaEnvio": "626e22ebfe9887654db63c38",
+    "shipping_status": "Solicitado",
+    "numeroContacto_recibe": "5524097656",
+    "contacto_recibe": "Rogelio",
+    "createdAt": "2024-12-03T16:15:10.039Z",
+    "updatedAt": "2024-12-03T16:15:10.039Z",
+    "__v": 0,
+    "lastUpdate": "Carlos Chavez"
+}

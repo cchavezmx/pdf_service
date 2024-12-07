@@ -155,8 +155,11 @@ async def create_invoice(request: Request, invoice_data: Paqueteria):
             "empresaEnvio": invoice_data.empresaEnvio,
             "contacto_recibe": invoice_data.contacto_recibe,
             "numeroContacto_recibe": invoice_data.numeroContacto_recibe,
+            "codigo": invoice_data.codigo,
             "fecha": fecha_actual,
             "createdAt": invoice_data.createdAt,
+            "contacto_recibe_email": invoice_data.contacto_recibe_email,
+            "emailContacto": invoice_data.emailContacto,
             "static_files_path": f"file://{static_files_path}",
             "qr_code": f"data:image/png;base64,{qr_img_base64}"
         }).body.decode("utf-8")

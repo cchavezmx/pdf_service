@@ -29,6 +29,8 @@
       }
 
       .header {
+        display: flex;
+        justify-content: space-between;
         text-align: center;
         font-size: 20px;
         font-weight: bold;
@@ -81,7 +83,10 @@
 
   <body>
     <div class="container">
-      <div class="header">Envío Paquetería GRUPO INTECSA</div>
+      <div class="header">
+        <p>Envío Paquetería GRUPO INTECSA</p>
+        <p>Folio: {{ codigo }}</p>
+      </div>
 
       <div class="content">
         <div class="section">
@@ -104,6 +109,7 @@
           <div class="info">
             <p><strong>Nombre:</strong> {{ contacto_recibe }}</p>
             <p><strong>Teléfono:</strong> {{ numeroContacto_recibe }}</p>
+            <p><strong>Correo:</strong> {{ contacto_recibe_email }}</p>
           </div>
         </div>
 
@@ -112,6 +118,7 @@
           <div class="info">
             <p><strong>Nombre:</strong> {{ contacto }}</p>
             <p><strong>Teléfono:</strong> {{ numeroContacto }}</p>
+            <p><strong>Correo:</strong> {{ emailContacto }}</p>
           </div>
         </div>
 

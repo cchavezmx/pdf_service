@@ -93,10 +93,17 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
 
 @app.post("/reporte/pagos/client-maya", response_class=StreamingResponse)
 async def create_invoice(request: Request, invoice_data: PagosMaya):
+
+    template = "maya/cliente.html"
+    referer = request.headers.get("referer")
+
+    if "gpomaya-ma-webapp.netlify.app" in referer:
+        template = "martin_maya/martin_maya.html"
+
     try:
         fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         static_files_path = os.path.abspath("static")
-        html_content = templates.TemplateResponse("maya/cliente.html", {
+        html_content = templates.TemplateResponse(template, {
             "request": request,
             "cliente": invoice_data.cliente,
             "proyecto": invoice_data.proyecto,

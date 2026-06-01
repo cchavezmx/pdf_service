@@ -5,19 +5,50 @@ from datetime import date
 
 
 class Description(BaseModel):
-    link_googlemaps: str
-    document_id: str
-    project_id: str
-    planDescription: str
-    planPrice: str
+    link_googlemaps: Optional[str] = ""
+    document_id: Optional[str] = ""
+    project_id: Optional[str] = ""
+    planDescription: Optional[str] = ""
+    planPrice: Optional[str] = ""
 
 
 class VehicleInfo(BaseModel):
-    name: str
-    placas: str
-    driver: str
-    fuel_card: str
-    fuel_amount: str
+    name: Optional[str] = ""
+    placas: Optional[str] = ""
+    driver: Optional[str] = ""
+    fuel_card: Optional[str] = ""
+    fuel_amount: Optional[str] = ""
+
+
+class CostBreakdown(BaseModel):
+    casetas_amount: Optional[float] = 0
+    operator_rate: Optional[float] = 0
+    operator_days: Optional[int] = 0
+    per_diem_rate: Optional[float] = 0
+    per_diem_days: Optional[int] = 0
+    gasoline_rate: Optional[float] = 0
+    gasoline_km: Optional[float] = 0
+    unit_rent_amount: Optional[float] = 0
+    unit_rent_period: Optional[str] = "dia"
+    profit_amount: Optional[float] = 0
+    indirect_amount: Optional[float] = 0
+
+
+class PreFlightItems(BaseModel):
+    extintor: Optional[bool] = True
+    llanta_refaccion: Optional[bool] = True
+    herramientas: Optional[bool] = True
+    gato: Optional[bool] = True
+    cinturon: Optional[bool] = True
+    documentos: Optional[bool] = True
+    tarjetas: Optional[bool] = True
+
+
+class PreFlight(BaseModel):
+    fuel_level: Optional[int] = 50
+    cargo_description: Optional[str] = ""
+    items: Optional[PreFlightItems] = None
+    observaciones: Optional[str] = ""
 
 
 class InvoiceData(BaseModel):
@@ -29,14 +60,19 @@ class InvoiceData(BaseModel):
     delivery_day: str
     currentClient: str
     subject: Optional[str] = None
-    vehicle: VehicleInfo
-    route: str
-    kilometer_out: int
-    fuel_level: int
-    recorrido_km: str
-    description: Description
-    subtotal_travel: str
-    isCancel_status: str
+    vehicle: Optional[VehicleInfo] = None
+    route: Optional[str] = ""
+    kilometer_out: Optional[int] = 0
+    fuel_level: Optional[int] = 0
+    recorrido_km: Optional[str] = ""
+    description: Optional[Description] = None
+    subtotal_travel: Optional[str] = ""
+    isCancel_status: Optional[str] = ""
+    cost_breakdown: Optional[CostBreakdown] = None
+    pre_flight: Optional[PreFlight] = None
+    profit_pct: Optional[float] = 8
+    indirect_pct: Optional[float] = 12
+    cargo_description: Optional[str] = ""
 
 
 class Cliente(BaseModel):
@@ -75,7 +111,7 @@ class PagosMaya(BaseModel):
     cliente: Cliente
     proyecto: Proyecto
     lote: Lote
-    pagos: List[Pago]  # Añadir esto
+    pagos: List[Pago]
 
 
 class Paqueteria(BaseModel):

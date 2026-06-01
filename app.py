@@ -16,6 +16,85 @@ from typing import Optional
 import qrcode
 
 
+def fmt_money(value: float) -> str:
+    """Format a number as Mexican pesos string."""
+    if value is None:
+        return "$0.00"
+    return f"${value:,.2f}"
+
+
+def build_cost_breakdown(cb):
+    """Build breakdown rows and totals from a CostBreakdown object."""
+    rows = []
+    if not cb:
+        return {"rows": [], "subtotal": 0.0, "iva": 0.0, "total": 0.0, "has_breakdown": False}
+
+    if cb.casetas_amount and cb.casetas_amount > 0:
+        rows.append({"concepto": "Casetas", "unidad": "—", "importe": cb.casetas_amount})
+
+    if cb.operator_rate and cb.operator_rate > 0 and cb.operator_days and cb.operator_days > 0:
+        amount = cb.operator_rate * cb.operator_days
+        rows.append({"concepto": "Operador", "unidad": f"{cb.operator_days} días × {fmt_money(cb.operator_rate)}/día", "importe": amount})
+
+    if cb.per_diem_rate and cb.per_diem_rate > 0 and cb.per_diem_days and cb.per_diem_days > 0:
+        amount = cb.per_diem_rate * cb.per_diem_days
+        rows.append({"concepto": "Viáticos", "unidad": f"{cb.per_diem_days} días × {fmt_money(cb.per_diem_rate)}/día", "importe": amount})
+
+    if cb.gasoline_rate and cb.gasoline_rate > 0 and cb.gasoline_km and cb.gasoline_km > 0:
+        amount = cb.gasoline_rate * cb.gasoline_km
+        rows.append({"concepto": "Gasolina", "unidad": f"{cb.gasoline_km} km × {fmt_money(cb.gasoline_rate)}/km", "importe": amount})
+
+    if cb.unit_rent_amount and cb.unit_rent_amount > 0:
+        period_label = {"dia": "Por día", "semana": "Por semana", "mes": "Por mes"}.get(cb.unit_rent_period, "—")
+        rows.append({"concepto": "Renta de unidad", "unidad": period_label, "importe": cb.unit_rent_amount})
+
+    if cb.profit_amount and cb.profit_amount > 0:
+        rows.append({"concepto": "Utilidad", "unidad": "—", "importe": cb.profit_amount})
+
+    if cb.indirect_amount and cb.indirect_amount > 0:
+        rows.append({"concepto": "Indirectos", "unidad": "—", "importe": cb.indirect_amount})
+
+    subtotal = sum(r["importe"] for r in rows)
+    iva = round(subtotal * 0.16 * 100) / 100
+    total = round((subtotal + iva) * 100) / 100
+
+    return {
+        "rows": rows,
+        "subtotal": subtotal,
+        "iva": iva,
+        "total": total,
+        "has_breakdown": len(rows) > 0
+    }
+
+
+def build_pre_flight(pf, top_level_cargo: str):
+    """Build pre-flight data for the template."""
+    if not pf:
+        return {"has_pre_flight": False}
+
+    items = []
+    if pf.items:
+        items = [
+            {"label": "Extintor", "value": pf.items.extintor},
+            {"label": "Llanta de refacción", "value": pf.items.llanta_refaccion},
+            {"label": "Herramientas", "value": pf.items.herramientas},
+            {"label": "Gato y cruceta", "value": pf.items.gato},
+            {"label": "Cinturón", "value": pf.items.cinturon},
+            {"label": "Documentos", "value": pf.items.documentos},
+            {"label": "Tarjetas", "value": pf.items.tarjetas},
+        ]
+
+    cargo = top_level_cargo or (pf.cargo_description if pf else "")
+
+    return {
+        "has_pre_flight": True,
+        "fuel_level": pf.fuel_level,
+        "cargo": cargo,
+        "observaciones": pf.observaciones,
+        "checklist": items
+    }
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 # Asegúrate de montar el directorio estático de FastAPI
@@ -57,15 +136,22 @@ async def generate_invoice(request: Request, details: dict, items: dict):
 @app.post("/vehicle-invoice/", response_class=StreamingResponse)
 async def create_invoice(request: Request, invoice_data: InvoiceData):
     try:
-
-        # Actualizar la fecha en los datos de la factura
+        # Convertir a diccionario
         invoice_data_dict = invoice_data.dict(by_alias=True)
+
+        # Calcular desglose de conceptos
+        breakdown = build_cost_breakdown(invoice_data.cost_breakdown)
+
+        # Preparar datos de pre-flight
+        pre_flight_data = build_pre_flight(invoice_data.pre_flight, invoice_data.cargo_description)
 
         # Renderizar la plantilla HTML con los datos proporcionados
         html_content = templates.TemplateResponse("intecsa/vehicles.html", {
             "request": request,
-            # Usar el diccionario actualizado con la fecha formateada
-            "details": invoice_data_dict
+            "details": invoice_data_dict,
+            "breakdown": breakdown,
+            "pre_flight_data": pre_flight_data,
+            "fmt_money": fmt_money
         }).body.decode("utf-8")
 
         # Opciones para permitir el acceso a archivos locales en wkhtmltopdf

@@ -267,45 +267,77 @@
                   <br />
                   <div class="col-offset-1 col-12 col-9 w-100">
                     <div class="invoice-bottom-right tabla--content">
+                      {% if details.vehicle %}
+                      {% if details.vehicle.name or details.vehicle.placas or details.vehicle.driver or details.vehicle.fuel_card or details.vehicle.fuel_amount %}
                       <br />
                       <h5>Datos Vehiculo</h5>
                       <table class="table">
                         <thead>
                           <tr>
-                            <th>Vehiculo</th>
-                            <th>Placas</th>
-                            <th>Chofer</th>
-                            <th>Tarjeta Gas</th>
-                            <th>Carga de Gas</th>
+                            {% if details.vehicle.name %}<th>Vehiculo</th>{% endif %}
+                            {% if details.vehicle.placas %}<th>Placas</th>{% endif %}
+                            {% if details.vehicle.driver %}<th>Chofer</th>{% endif %}
+                            {% if details.vehicle.fuel_card %}<th>Tarjeta Gas</th>{% endif %}
+                            {% if details.vehicle.fuel_amount %}<th>Carga de Gas</th>{% endif %}
                           </tr>
                         </thead>
                         <tbody>
-                          <td>{{ details.vehicle.name }}</td>
-                          <td>{{ details.vehicle.placas }}</td>
-                          <td>{{ details.vehicle.driver }}</td>
-                          <td>{{ details.vehicle.fuel_card }}</td>
-                          <td>{{ details.vehicle.fuel_amount }}</td>
+                          {% if details.vehicle.name %}<td>{{ details.vehicle.name }}</td>{% endif %}
+                          {% if details.vehicle.placas %}<td>{{ details.vehicle.placas }}</td>{% endif %}
+                          {% if details.vehicle.driver %}<td>{{ details.vehicle.driver }}</td>{% endif %}
+                          {% if details.vehicle.fuel_card %}<td>{{ details.vehicle.fuel_card }}</td>{% endif %}
+                          {% if details.vehicle.fuel_amount %}<td>{{ details.vehicle.fuel_amount }}</td>{% endif %}
                         </tbody>
                       </table>
+                      {% endif %}
+                      {% endif %}
+                      {% if details.route or details.kilometer_out or details.fuel_level or details.recorrido_km %}
                       <br />
                       <h5>Datos de Ruta</h5>
                       <table class="table">
                         <thead>
                           <tr>
-                            <th>Recorrido</th>
-                            <th>Km Salida</th>
-                            <th>Gas Salida</th>
-                            <th>Distancia Recorrido</th>
+                            {% if details.route %}<th>Recorrido</th>{% endif %}
+                            {% if details.kilometer_out %}<th>Km Salida</th>{% endif %}
+                            {% if details.fuel_level %}<th>Gas Salida</th>{% endif %}
+                            {% if details.recorrido_km %}<th>Distancia Recorrido</th>{% endif %}
                           </tr>
                         </thead>
                         <tbody>
-                          <td>{{ details.route }}</td>
-                          <td>{{ details.kilometer_out }}</td>
-                          <td>{{ details.fuel_level }}%</td>
-                          <td>{{ details.recorrido_km }} KM aprox</td>
+                          {% if details.route %}<td>{{ details.route }}</td>{% endif %}
+                          {% if details.kilometer_out %}<td>{{ details.kilometer_out }}</td>{% endif %}
+                          {% if details.fuel_level %}<td>{{ details.fuel_level }}%</td>{% endif %}
+                          {% if details.recorrido_km %}<td>{{ details.recorrido_km }} KM aprox</td>{% endif %}
                         </tbody>
                       </table>
+                      {% endif %}
                       <br />
+                      {% if breakdown.has_breakdown %}
+                      <h5>Resumen de Facturación</h5>
+                      <table class="table">
+                        <thead>
+                          <tr>
+                            <th>Concepto</th>
+                            <th style="text-align: right;">Importe</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Subtotal</td>
+                            <td style="text-align: right;">{{ fmt_money(breakdown.subtotal) }}</td>
+                          </tr>
+                          <tr>
+                            <td>IVA (16%)</td>
+                            <td style="text-align: right;">{{ fmt_money(breakdown.iva) }}</td>
+                          </tr>
+                          <tr style="font-weight: bold; background-color: #f5f5f5;">
+                            <td>TOTAL</td>
+                            <td style="text-align: right;">{{ fmt_money(breakdown.total) }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      {% else %}
+                      {% if details.description and (details.description.planDescription or details.description.planPrice or details.subtotal_travel) %}
                       <h5>Plan del Vehiculo</h5>
                       <table class="table">
                         <thead>
@@ -316,36 +348,63 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <td>{{ details.description.planDescription }}</td>
-                          <td>$ {{ details.description.planPrice }}</td>
-                          <td>{{ details.subtotal_travel }}</td>
+                          <td>{{ details.description.planDescription or "—" }}</td>
+                          <td>{% if details.description.planPrice %}$ {{ details.description.planPrice }}{% else %}—{% endif %}</td>
+                          <td>{% if details.subtotal_travel %}{{ details.subtotal_travel }}{% else %}—{% endif %}</td>
                         </tbody>
                       </table>
+                      {% endif %}
+                      {% endif %}
+                      {% if details.description and (details.description.link_googlemaps or details.description.document_id or details.description.project_id) %}
                       <br />
                       <h5>Observaciones</h5>
                       <table class="table">
                         <thead>
                           <tr>
-                            <th>Google maps</th>
-                            <th>
-                              Salida de almacén <br />
-                              (ADMIN/COMERCIAL)
-                            </th>
-                            <th>Proyecto</th>
+                            {% if details.description.link_googlemaps %}<th>Google maps</th>{% endif %}
+                            {% if details.description.document_id %}<th>Salida de almacén <br />(ADMIN/COMERCIAL)</th>{% endif %}
+                            {% if details.description.project_id %}<th>Proyecto</th>{% endif %}
                           </tr>
                         </thead>
                         <tbody>
+                          {% if details.description.link_googlemaps %}
                           <td>
-                            <a
-                              target="_blank"
-                              href="{{ details.description.link_googlemaps }}"
-                              >Ver recorrido</a
-                            >
+                            <a target="_blank" href="{{ details.description.link_googlemaps }}">Ver recorrido</a>
                           </td>
-                          <td>{{ details.description.document_id }}</td>
-                          <td>{{ details.description.project_id }}</td>
+                          {% endif %}
+                          {% if details.description.document_id %}<td>{{ details.description.document_id }}</td>{% endif %}
+                          {% if details.description.project_id %}<td>{{ details.description.project_id }}</td>{% endif %}
                         </tbody>
                       </table>
+                      {% endif %}
+                      {% if pre_flight_data.has_pre_flight %}
+                      <br />
+                      <h5>REVISIÓN DE UNIDAD (Pre-Flight)</h5>
+                      <div style="border: 1px solid #ddd; padding: 15px; margin-top: 10px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
+                          {% for item in pre_flight_data.checklist %}
+                          <div style="width: 45%; display: flex; align-items: center;">
+                            {% if item.value %}
+                            <span style="color: green; font-weight: bold; margin-right: 8px;">[✓]</span>
+                            <span>{{ item.label }}</span>
+                            {% else %}
+                            <span style="color: red; font-weight: bold; margin-right: 8px;">[✗]</span>
+                            <span style="color: red;">{{ item.label }}</span>
+                            {% endif %}
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% if pre_flight_data.fuel_level is not none %}
+                        <p><strong>Nivel de combustible:</strong> {{ pre_flight_data.fuel_level }}%</p>
+                        {% endif %}
+                        {% if pre_flight_data.cargo %}
+                        <p><strong>Carga:</strong> {{ pre_flight_data.cargo }}</p>
+                        {% endif %}
+                        {% if pre_flight_data.observaciones %}
+                        <p><strong>Obs.:</strong> {{ pre_flight_data.observaciones }}</p>
+                        {% endif %}
+                      </div>
+                      {% endif %}
                       <!-- <div class="recorrido">
                         <h5>Recorrido</h5>
                         <img

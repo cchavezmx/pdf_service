@@ -8,6 +8,7 @@ class Description(BaseModel):
     link_googlemaps: Optional[str] = ""
     document_id: Optional[str] = ""
     project_id: Optional[str] = ""
+    planName: Optional[str] = ""
     planDescription: Optional[str] = ""
     planPrice: Optional[str] = ""
 
@@ -15,21 +16,30 @@ class Description(BaseModel):
 class VehicleInfo(BaseModel):
     name: Optional[str] = ""
     placas: Optional[str] = ""
+    unit_code: Optional[str] = ""
     driver: Optional[str] = ""
+    driver_address: Optional[str] = ""
     fuel_card: Optional[str] = ""
     fuel_amount: Optional[str] = ""
 
 
 class CostBreakdown(BaseModel):
     casetas_amount: Optional[float] = 0
+    casetas_unit: Optional[str] = "fijo"
+    casetas_notes: Optional[str] = ""
     operator_rate: Optional[float] = 0
+    operator_unit: Optional[str] = "dia"
     operator_days: Optional[int] = 0
     per_diem_rate: Optional[float] = 0
+    per_diem_unit: Optional[str] = "dia"
     per_diem_days: Optional[int] = 0
     gasoline_rate: Optional[float] = 0
+    gasoline_unit: Optional[str] = "km"
     gasoline_km: Optional[float] = 0
     unit_rent_amount: Optional[float] = 0
     unit_rent_period: Optional[str] = "dia"
+    unit_rent_unit: Optional[str] = "dia"
+    unit_rent_qty: Optional[int] = 0
     profit_amount: Optional[float] = 0
     indirect_amount: Optional[float] = 0
 
@@ -63,6 +73,7 @@ class InvoiceData(BaseModel):
     vehicle: Optional[VehicleInfo] = None
     route: Optional[str] = ""
     kilometer_out: Optional[int] = 0
+    kilometer_in: Optional[int] = 0
     fuel_level: Optional[int] = 0
     recorrido_km: Optional[str] = ""
     description: Optional[Description] = None
@@ -73,6 +84,7 @@ class InvoiceData(BaseModel):
     profit_pct: Optional[float] = 8
     indirect_pct: Optional[float] = 12
     cargo_description: Optional[str] = ""
+    payment_method: Optional[str] = ""  # Forma de pago: Efectivo, Transferencia, etc.
 
 
 class Cliente(BaseModel):

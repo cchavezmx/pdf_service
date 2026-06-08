@@ -23,44 +23,61 @@ def fmt_money(value: float) -> str:
     return f"${value:,.2f}"
 
 
-def build_cost_breakdown(cb):
+def build_cost_breakdown(cb, profit_pct=8, indirect_pct=12):
     """Build breakdown rows and totals from a CostBreakdown object."""
     rows = []
     if not cb:
         return {"rows": [], "subtotal": 0.0, "iva": 0.0, "total": 0.0, "has_breakdown": False}
 
     if cb.casetas_amount and cb.casetas_amount > 0:
-        rows.append({"concepto": "Casetas", "unidad": "—", "importe": cb.casetas_amount})
+        notes = cb.casetas_notes or ""
+        unit_label = f"Monto fijo" + (f" — {notes}" if notes else "")
+        rows.append({"concepto": "Casetas", "unidad": unit_label, "importe": cb.casetas_amount})
 
     if cb.operator_rate and cb.operator_rate > 0 and cb.operator_days and cb.operator_days > 0:
         amount = cb.operator_rate * cb.operator_days
-        rows.append({"concepto": "Operador", "unidad": f"{cb.operator_days} días × {fmt_money(cb.operator_rate)}/día", "importe": amount})
+        unit_label = f"{cb.operator_days} días × {fmt_money(cb.operator_rate)}/día"
+        rows.append({"concepto": "Operador", "unidad": unit_label, "importe": amount})
 
     if cb.per_diem_rate and cb.per_diem_rate > 0 and cb.per_diem_days and cb.per_diem_days > 0:
         amount = cb.per_diem_rate * cb.per_diem_days
-        rows.append({"concepto": "Viáticos", "unidad": f"{cb.per_diem_days} días × {fmt_money(cb.per_diem_rate)}/día", "importe": amount})
+        unit_label = f"{cb.per_diem_days} días × {fmt_money(cb.per_diem_rate)}/día"
+        rows.append({"concepto": "Viáticos", "unidad": unit_label, "importe": amount})
 
     if cb.gasoline_rate and cb.gasoline_rate > 0 and cb.gasoline_km and cb.gasoline_km > 0:
         amount = cb.gasoline_rate * cb.gasoline_km
-        rows.append({"concepto": "Gasolina", "unidad": f"{cb.gasoline_km} km × {fmt_money(cb.gasoline_rate)}/km", "importe": amount})
+        unit_label = f"{cb.gasoline_km} km × {fmt_money(cb.gasoline_rate)}"
+        rows.append({"concepto": "Gasolina", "unidad": unit_label, "importe": amount})
 
     if cb.unit_rent_amount and cb.unit_rent_amount > 0:
-        period_label = {"dia": "Por día", "semana": "Por semana", "mes": "Por mes"}.get(cb.unit_rent_period, "—")
-        rows.append({"concepto": "Renta de unidad", "unidad": period_label, "importe": cb.unit_rent_amount})
+        rent_label = {"dia": "Renta por día", "semana": "Renta por semana", "mes": "Renta por mes"}.get(cb.unit_rent_period, "Renta de unidad")
+        unit_label = f"Por {cb.unit_rent_period or 'dia'}"
+        if cb.unit_rent_qty and cb.unit_rent_qty > 0:
+            unit_label = f"{cb.unit_rent_qty} {cb.unit_rent_period or 'dia'} × {fmt_money(cb.unit_rent_amount)}"
+        rows.append({"concepto": rent_label, "unidad": unit_label, "importe": cb.unit_rent_amount})
 
-    if cb.profit_amount and cb.profit_amount > 0:
-        rows.append({"concepto": "Utilidad", "unidad": "—", "importe": cb.profit_amount})
-
-    if cb.indirect_amount and cb.indirect_amount > 0:
-        rows.append({"concepto": "Indirectos", "unidad": "—", "importe": cb.indirect_amount})
-
+    # Subtotal = solo conceptos base (no incluye utilidad ni indirectos)
     subtotal = sum(r["importe"] for r in rows)
-    iva = round(subtotal * 0.16 * 100) / 100
-    total = round((subtotal + iva) * 100) / 100
+
+    # Si el backend no envió montos calculados, calcularlos desde los porcentajes
+    profit_amount = cb.profit_amount or 0
+    indirect_amount = cb.indirect_amount or 0
+
+    if not profit_amount and profit_pct:
+        profit_amount = round(subtotal * (profit_pct / 100) * 100) / 100
+    if not indirect_amount and indirect_pct:
+        indirect_amount = round(subtotal * (indirect_pct / 100) * 100) / 100
+
+    # IVA se calcula sobre subtotal + utilidad + indirectos
+    base_iva = subtotal + profit_amount + indirect_amount
+    iva = round(base_iva * 0.16 * 100) / 100
+    total = round((base_iva + iva) * 100) / 100
 
     return {
         "rows": rows,
         "subtotal": subtotal,
+        "profit": profit_amount,
+        "indirect": indirect_amount,
         "iva": iva,
         "total": total,
         "has_breakdown": len(rows) > 0
@@ -140,7 +157,11 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
         invoice_data_dict = invoice_data.dict(by_alias=True)
 
         # Calcular desglose de conceptos
-        breakdown = build_cost_breakdown(invoice_data.cost_breakdown)
+        breakdown = build_cost_breakdown(
+            invoice_data.cost_breakdown,
+            profit_pct=invoice_data.profit_pct or 8,
+            indirect_pct=invoice_data.indirect_pct or 12
+        )
 
         # Preparar datos de pre-flight
         pre_flight_data = build_pre_flight(invoice_data.pre_flight, invoice_data.cargo_description)

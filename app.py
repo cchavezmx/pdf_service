@@ -44,9 +44,14 @@ def build_cost_breakdown(cb, profit_pct=8, indirect_pct=12):
         unit_label = f"{cb.per_diem_days} días × {fmt_money(cb.per_diem_rate)}/día"
         rows.append({"concepto": "Viáticos", "unidad": unit_label, "importe": amount})
 
-    if cb.gasoline_rate and cb.gasoline_rate > 0 and cb.gasoline_km and cb.gasoline_km > 0:
-        amount = cb.gasoline_rate * cb.gasoline_km
-        unit_label = f"{cb.gasoline_km} km × {fmt_money(cb.gasoline_rate)}"
+    if cb.gasoline_rate and cb.gasoline_rate > 0:
+        # Gasolina es monto fijo de carga manual. NO se multiplica por gasoline_km.
+        # gasoline_km es solo informativo (kilometraje del recorrido).
+        amount = cb.gasoline_rate
+        if cb.gasoline_km and cb.gasoline_km > 0:
+            unit_label = f"Monto fijo ({cb.gasoline_km} km recorrido)"
+        else:
+            unit_label = "Monto fijo"
         rows.append({"concepto": "Gasolina", "unidad": unit_label, "importe": amount})
 
     if cb.unit_rent_amount and cb.unit_rent_amount > 0:

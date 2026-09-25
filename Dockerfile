@@ -20,10 +20,10 @@ RUN apt-get update \
         libxrender1 \
         xfonts-75dpi \
         xfonts-base \
-    && wget -q -O /tmp/wkhtmltopdf.deb \
-        https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltopdf_0.12.6.1-3.bookworm_amd64.deb \
-    && apt-get install -y --no-install-recommends /tmp/wkhtmltopdf.deb \
-    && rm -f /tmp/wkhtmltopdf.deb \
+    && wget -q -O /tmp/wkhtmltox.deb \
+        https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.bookworm_amd64.deb \
+    && apt-get install -y --no-install-recommends /tmp/wkhtmltox.deb \
+    && rm -f /tmp/wkhtmltox.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

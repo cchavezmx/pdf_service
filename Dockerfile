@@ -22,8 +22,7 @@ RUN apt-get update \
         xfonts-base \
     && wget -q -O /tmp/wkhtmltopdf.deb \
         https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltopdf_0.12.6.1-3.bookworm_amd64.deb \
-    && dpkg -i /tmp/wkhtmltopdf.deb \
-    && apt-get install -f -y --no-install-recommends \
+    && apt-get install -y --no-install-recommends /tmp/wkhtmltopdf.deb \
     && rm -f /tmp/wkhtmltopdf.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

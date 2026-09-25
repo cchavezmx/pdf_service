@@ -44,6 +44,23 @@ class CostBreakdown(BaseModel):
     indirect_amount: Optional[float] = 0
 
 
+class LineItem(BaseModel):
+    label: str
+    unit_price: Optional[float] = 0
+    qty: Optional[float] = 0
+    unit: Optional[str] = ""
+    notes: Optional[str] = ""
+    total: Optional[float] = 0
+
+
+class Totals(BaseModel):
+    concepts_subtotal: Optional[float] = 0
+    subtotal_travel: Optional[float] = 0
+    profit_amount: Optional[float] = 0
+    indirect_amount: Optional[float] = 0
+    grand_total: Optional[float] = 0
+
+
 class PreFlightItems(BaseModel):
     extintor: Optional[bool] = True
     llanta_refaccion: Optional[bool] = True
@@ -85,6 +102,9 @@ class InvoiceData(BaseModel):
     indirect_pct: Optional[float] = 12
     cargo_description: Optional[str] = ""
     payment_method: Optional[str] = ""  # Forma de pago: Efectivo, Transferencia, etc.
+    snapshot_mode: Optional[bool] = False
+    line_items: Optional[List[LineItem]] = None
+    totals: Optional[Totals] = None
 
 
 class Cliente(BaseModel):

@@ -63,6 +63,16 @@
 
       .cancel-banner { margin-top: 16px; border: 1px solid #fca5a5; background: #fef2f2;
         color: #b91c1c; padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+
+      /* tabla de conceptos en snapshot mode */
+      table.snapshot-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+      table.snapshot-table th { background: #f8fafc; color: #475569; font-weight: 700;
+        text-align: left; padding: 10px 12px; border-bottom: 2px solid #e2e8f0;
+        text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+      table.snapshot-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+      table.snapshot-table td.num { text-align: right; white-space: nowrap; }
+      table.snapshot-table td.notes { color: #64748b; font-size: 13px; }
+      table.snapshot-table tr:last-child td { border-bottom: none; }
     </style>
   </head>
   <body>
@@ -164,23 +174,61 @@
                 <td><span class="card-icon">$</span><span class="card-title">Facturación</span></td>
               </tr>
             </table>
-            <table class="rows">
-              {% if breakdown.has_breakdown %}
+
+            {% if breakdown.has_breakdown and snapshot_mode %}
+            <table class="snapshot-table">
+              <thead>
+                <tr>
+                  <th>Concepto</th>
+                  <th style="text-align:right;">P. unitario</th>
+                  <th style="text-align:right;">Cant.</th>
+                  <th>Unidad</th>
+                  <th>Notas</th>
+                  <th style="text-align:right;">Importe</th>
+                </tr>
+              </thead>
+              <tbody>
                 {% for row in breakdown.rows %}
                 <tr>
-                  <td class="label">{{ row.concepto }}{% if row.unidad != '—' %}<br><span class="sub">{{ row.unidad }}</span>{% endif %}</td>
-                  <td class="value">{{ fmt_money(row.importe) }}</td>
+                  <td>{{ row.concepto or '—' }}</td>
+                  <td class="num">{{ fmt_money(row.unit_price) }}</td>
+                  <td class="num">{{ row.qty or '—' }}</td>
+                  <td>{{ row.unidad or '—' }}</td>
+                  <td class="notes">{{ row.notes or '—' }}</td>
+                  <td class="num">{{ fmt_money(row.importe) }}</td>
                 </tr>
                 {% endfor %}
-                <tr><td class="label">Subtotal</td><td class="value">{{ fmt_money(breakdown.subtotal) }}</td></tr>
-                <tr><td class="label">Utilidad {{ details.profit_pct or 8 }}%</td><td class="value">{{ fmt_money(breakdown.profit) }}</td></tr>
-                <tr><td class="label">Indirectos {{ details.indirect_pct or 12 }}%</td><td class="value">{{ fmt_money(breakdown.indirect) }}</td></tr>
-                <tr><td class="label">IVA 16%</td><td class="value">{{ fmt_money(breakdown.iva) }}</td></tr>
-              {% else %}
-                <tr><td class="label">Importe</td><td class="value">{{ details.subtotal_travel or '—' }}</td></tr>
-              {% endif %}
+              </tbody>
+            </table>
+            <table class="rows">
+              <tr><td class="label">Subtotal conceptos</td><td class="value">{{ fmt_money(breakdown.subtotal) }}</td></tr>
+              <tr><td class="label">Subtotal viaje</td><td class="value">{{ fmt_money(breakdown.subtotal_travel) }}</td></tr>
+              <tr><td class="label">Utilidad</td><td class="value">{{ fmt_money(breakdown.profit) }}</td></tr>
+              <tr><td class="label">Indirectos</td><td class="value">{{ fmt_money(breakdown.indirect) }}</td></tr>
               <tr><td class="label">Forma de pago</td><td class="value">{{ details.payment_method or '—' }}</td></tr>
             </table>
+
+            {% elif breakdown.has_breakdown %}
+            <table class="rows">
+              {% for row in breakdown.rows %}
+              <tr>
+                <td class="label">{{ row.concepto }}{% if row.unidad != '—' %}<br><span class="sub">{{ row.unidad }}</span>{% endif %}</td>
+                <td class="value">{{ fmt_money(row.importe) }}</td>
+              </tr>
+              {% endfor %}
+              <tr><td class="label">Subtotal</td><td class="value">{{ fmt_money(breakdown.subtotal) }}</td></tr>
+              <tr><td class="label">Utilidad {{ details.profit_pct or 8 }}%</td><td class="value">{{ fmt_money(breakdown.profit) }}</td></tr>
+              <tr><td class="label">Indirectos {{ details.indirect_pct or 12 }}%</td><td class="value">{{ fmt_money(breakdown.indirect) }}</td></tr>
+              <tr><td class="label">IVA 16%</td><td class="value">{{ fmt_money(breakdown.iva) }}</td></tr>
+              <tr><td class="label">Forma de pago</td><td class="value">{{ details.payment_method or '—' }}</td></tr>
+            </table>
+
+            {% else %}
+            <table class="rows">
+              <tr><td class="label">Importe</td><td class="value">{{ details.subtotal_travel or '—' }}</td></tr>
+              <tr><td class="label">Forma de pago</td><td class="value">{{ details.payment_method or '—' }}</td></tr>
+            </table>
+            {% endif %}
           </div>
         </td>
       </tr>
@@ -221,7 +269,7 @@
         <tr>
           <td class="total-label">Total estimado del documento</td>
           <td class="total-amount">
-            {% if breakdown.has_breakdown %}{{ fmt_money(breakdown.total) }}{% else %}{{ details.subtotal_travel or '—' }}{% endif %}
+            {% if breakdown.has_breakdown %}{{ fmt_money(breakdown.grand_total or breakdown.total) }}{% else %}{{ details.subtotal_travel or '—' }}{% endif %}
           </td>
         </tr>
       </table>

@@ -21,3 +21,92 @@ Content-Length: 629
     "__v": 0,
     "lastUpdate": "Carlos Chavez"
 }
+
+###
+POST /vehicle-invoice/ HTTP/1.1
+Host: localhost:8000
+Content-Type: application/json
+
+{
+  "type": "solicitud",
+  "currentEmpresa": "Grupo Intecsa",
+  "folio": 1042,
+  "created_day": "2024-12-10",
+  "request_day": "2024-12-10",
+  "delivery_day": "2024-12-20",
+  "currentClient": "Cliente Demo",
+  "subject": "Traslado de unidad",
+  "vehicle": {
+    "name": "Camioneta",
+    "placas": "ABC-123",
+    "unit_code": "UNI-042",
+    "driver": "Juan Pérez",
+    "driver_address": "Av. Principal 123",
+    "fuel_card": "1234",
+    "fuel_amount": "50"
+  },
+  "route": "CDMX → Guadalajara",
+  "kilometer_out": 10500,
+  "kilometer_in": 11200,
+  "fuel_level": 85,
+  "recorrido_km": "700",
+  "description": {
+    "link_googlemaps": "",
+    "document_id": "doc-123",
+    "project_id": "proj-456",
+    "planName": "Plan Demo",
+    "planDescription": "Descripción del plan",
+    "planPrice": "1000"
+  },
+  "subtotal_travel": "18450",
+  "isCancel_status": "",
+  "snapshot_mode": true,
+  "line_items": [
+    {
+      "label": "Renta de unidad",
+      "unit_price": 41,
+      "qty": 450,
+      "unit": "día",
+      "notes": "Renta por trayecto",
+      "total": 18450
+    },
+    {
+      "label": "Casetas",
+      "unit_price": 2500,
+      "qty": 1,
+      "unit": "fijo",
+      "notes": "Casetas autopista",
+      "total": 2500
+    },
+    {
+      "label": "Operador",
+      "unit_price": 800,
+      "qty": 2,
+      "unit": "día",
+      "notes": "Operador asignado",
+      "total": 1600
+    }
+  ],
+  "totals": {
+    "concepts_subtotal": 22550,
+    "subtotal_travel": 18450,
+    "profit_amount": 1804,
+    "indirect_amount": 2706,
+    "grand_total": 27060
+  },
+  "pre_flight": {
+    "fuel_level": 85,
+    "cargo_description": "Carga general",
+    "items": {
+      "extintor": true,
+      "llanta_refaccion": true,
+      "herramientas": true,
+      "gato": true,
+      "cinturon": true,
+      "documentos": true,
+      "tarjetas": true
+    },
+    "observaciones": "Unidad en buenas condiciones"
+  },
+  "payment_method": "Transferencia"
+}

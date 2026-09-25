@@ -161,12 +161,37 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
         # Convertir a diccionario
         invoice_data_dict = invoice_data.dict(by_alias=True)
 
-        # Calcular desglose de conceptos
-        breakdown = build_cost_breakdown(
-            invoice_data.cost_breakdown,
-            profit_pct=invoice_data.profit_pct or 8,
-            indirect_pct=invoice_data.indirect_pct or 12
-        )
+        # Construir desglose de conceptos según el modo
+        if invoice_data.snapshot_mode:
+            rows = []
+            for item in (invoice_data.line_items or []):
+                rows.append({
+                    "concepto": item.label,
+                    "unidad": item.unit or "—",
+                    "importe": item.total or 0,
+                    "unit_price": item.unit_price or 0,
+                    "qty": item.qty or 0,
+                    "notes": item.notes or ""
+                })
+            totals = invoice_data.totals or Totals()
+            breakdown = {
+                "rows": rows,
+                "subtotal": totals.concepts_subtotal or 0,
+                "subtotal_travel": totals.subtotal_travel or 0,
+                "profit": totals.profit_amount or 0,
+                "indirect": totals.indirect_amount or 0,
+                "total": totals.grand_total or 0,
+                "grand_total": totals.grand_total or 0,
+                "has_breakdown": len(rows) > 0,
+                "snapshot_mode": True
+            }
+        else:
+            breakdown = build_cost_breakdown(
+                invoice_data.cost_breakdown,
+                profit_pct=invoice_data.profit_pct or 8,
+                indirect_pct=invoice_data.indirect_pct or 12
+            )
+            breakdown["snapshot_mode"] = False
 
         # Preparar datos de pre-flight
         pre_flight_data = build_pre_flight(invoice_data.pre_flight, invoice_data.cargo_description)
@@ -177,7 +202,8 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
             "details": invoice_data_dict,
             "breakdown": breakdown,
             "pre_flight_data": pre_flight_data,
-            "fmt_money": fmt_money
+            "fmt_money": fmt_money,
+            "snapshot_mode": invoice_data.snapshot_mode
         }).body.decode("utf-8")
 
         # Opciones para permitir el acceso a archivos locales en wkhtmltopdf

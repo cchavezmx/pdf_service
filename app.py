@@ -23,70 +23,165 @@ def fmt_money(value: float) -> str:
     return f"${value:,.2f}"
 
 
-def build_cost_breakdown(cb, profit_pct=8, indirect_pct=12):
-    """Build breakdown rows and totals from a CostBreakdown object."""
-    rows = []
-    if not cb:
-        return {"rows": [], "subtotal": 0.0, "iva": 0.0, "total": 0.0, "has_breakdown": False}
+def _round_money(value) -> float:
+    """Redondea a 2 decimales (espejo de roundMoney en utils/costBreakdown.js)."""
+    return round(float(value), 2)
 
-    if cb.casetas_amount and cb.casetas_amount > 0:
+
+def compute_dias_periodo(request_day, delivery_day) -> int:
+    """Días entre request_day y delivery_day (mínimo 1), para defaults de
+    conceptos por día. Tolerante a formatos de fecha."""
+    if not request_day or not delivery_day:
+        return 1
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            req = datetime.strptime(str(request_day).strip(), fmt)
+            deliv = datetime.strptime(str(delivery_day).strip(), fmt)
+            diff = (deliv - req).days
+            return diff if diff > 0 else 1
+        except (ValueError, TypeError):
+            continue
+    return 1
+
+
+def _concept_importe(rate, unit, qty, dias_periodo=1, fixed=False):
+    """Importe por concepto desde tarifas crudas. Espejo de computeConceptTotal
+    en utils/costBreakdown.js del wizard; solo se usa como fallback cuando el
+    payload no trae el *_importe ya calculado."""
+    rate = rate or 0
+    if not rate:
+        return 0.0
+    if fixed or unit == "fijo":
+        return _round_money(rate)
+    qty = qty or 0
+    if not qty:
+        qty = dias_periodo or 1
+    return _round_money(rate * qty)
+
+
+def _gasoline_importe(rate, unit, km):
+    """Gasolina: monto fijo salvo unidad 'km' con km > 0 (espejo del wizard)."""
+    rate = rate or 0
+    if not rate:
+        return 0.0
+    if unit == "km" and (km or 0) > 0:
+        return _round_money(rate * (km or 0))
+    return _round_money(rate)
+
+
+def _build_breakdown_rows(cb, importes, dias_periodo=1):
+    """Renglones del desglose. Las tarifas crudas solo arman los textos
+    ("40 día × $430.00"); el importe siempre es el final (verbatim o fallback)."""
+    rows = []
+
+    if importes["casetas"] > 0:
         notes = cb.casetas_notes or ""
         unit_label = f"Monto fijo" + (f" — {notes}" if notes else "")
-        rows.append({"concepto": "Casetas", "unidad": unit_label, "importe": cb.casetas_amount})
+        rows.append({"concepto": "Casetas", "unidad": unit_label, "importe": importes["casetas"]})
 
-    if cb.operator_rate and cb.operator_rate > 0 and cb.operator_days and cb.operator_days > 0:
-        amount = cb.operator_rate * cb.operator_days
-        unit_label = f"{cb.operator_days} días × {fmt_money(cb.operator_rate)}/día"
-        rows.append({"concepto": "Operador", "unidad": unit_label, "importe": amount})
+    if importes["operator"] > 0:
+        op_days = cb.operator_days or (0 if cb.operator_unit == "fijo" else dias_periodo)
+        unit_label = f"{op_days} días × {fmt_money(cb.operator_rate)}/día" if op_days else "Monto fijo"
+        rows.append({"concepto": "Operador", "unidad": unit_label, "importe": importes["operator"]})
 
-    if cb.per_diem_rate and cb.per_diem_rate > 0 and cb.per_diem_days and cb.per_diem_days > 0:
-        amount = cb.per_diem_rate * cb.per_diem_days
-        unit_label = f"{cb.per_diem_days} días × {fmt_money(cb.per_diem_rate)}/día"
-        rows.append({"concepto": "Viáticos", "unidad": unit_label, "importe": amount})
+    if importes["per_diem"] > 0:
+        pd_days = cb.per_diem_days or (0 if cb.per_diem_unit == "fijo" else dias_periodo)
+        unit_label = f"{pd_days} días × {fmt_money(cb.per_diem_rate)}/día" if pd_days else "Monto fijo"
+        rows.append({"concepto": "Viáticos", "unidad": unit_label, "importe": importes["per_diem"]})
 
-    if cb.gasoline_rate and cb.gasoline_rate > 0:
-        # Gasolina es monto fijo de carga manual. NO se multiplica por gasoline_km.
-        # gasoline_km es solo informativo (kilometraje del recorrido).
-        amount = cb.gasoline_rate
-        if cb.gasoline_km and cb.gasoline_km > 0:
+    if importes["gasoline"] > 0:
+        if cb.gasoline_unit == "km" and cb.gasoline_km and cb.gasoline_km > 0:
+            unit_label = f"{cb.gasoline_km} km × {fmt_money(cb.gasoline_rate)}/km"
+        elif cb.gasoline_km and cb.gasoline_km > 0:
             unit_label = f"Monto fijo ({cb.gasoline_km} km recorrido)"
         else:
             unit_label = "Monto fijo"
-        rows.append({"concepto": "Gasolina", "unidad": unit_label, "importe": amount})
+        rows.append({"concepto": "Gasolina", "unidad": unit_label, "importe": importes["gasoline"]})
 
-    if cb.unit_rent_amount and cb.unit_rent_amount > 0:
+    if importes["unit_rent"] > 0:
         rent_label = {"dia": "Renta por día", "semana": "Renta por semana", "mes": "Renta por mes"}.get(cb.unit_rent_period, "Renta de unidad")
-        unit_label = f"Por {cb.unit_rent_period or 'dia'}"
-        if cb.unit_rent_qty and cb.unit_rent_qty > 0:
-            unit_label = f"{cb.unit_rent_qty} {cb.unit_rent_period or 'dia'} × {fmt_money(cb.unit_rent_amount)}"
-        rows.append({"concepto": rent_label, "unidad": unit_label, "importe": cb.unit_rent_amount})
+        qty = cb.unit_rent_qty or (0 if cb.unit_rent_unit == "fijo" else dias_periodo)
+        if qty and cb.unit_rent_amount:
+            unit_label = f"{qty} {cb.unit_rent_period or 'dia'} × {fmt_money(cb.unit_rent_amount)}"
+        else:
+            unit_label = f"Por {cb.unit_rent_period or 'dia'}"
+        rows.append({"concepto": rent_label, "unidad": unit_label, "importe": importes["unit_rent"]})
 
-    # Subtotal = solo conceptos base (no incluye utilidad ni indirectos)
-    subtotal = sum(r["importe"] for r in rows)
+    return rows
 
-    # Si el backend no envió montos calculados, calcularlos desde los porcentajes
-    profit_amount = cb.profit_amount or 0
-    indirect_amount = cb.indirect_amount or 0
 
-    if not profit_amount and profit_pct:
-        profit_amount = round(subtotal * (profit_pct / 100) * 100) / 100
-    if not indirect_amount and indirect_pct:
-        indirect_amount = round(subtotal * (indirect_pct / 100) * 100) / 100
+def build_cost_breakdown(cb, profit_pct=8, indirect_pct=12, dias_periodo=1):
+    """Build breakdown rows and totals from a CostBreakdown object.
 
-    # IVA se calcula sobre subtotal + utilidad + indirectos
-    base_iva = subtotal + profit_amount + indirect_amount
-    iva = round(base_iva * 0.16 * 100) / 100
-    total = round((base_iva + iva) * 100) / 100
+    Regla de negocio: el servicio de PDF no recalcula. Si el wizard/API ya
+    envió los montos finales (*_importe, subtotal_amount, base_amount,
+    iva_amount, total_amount), se renderizan tal cual. La fórmula de fallback
+    (con renta × unit_rent_qty) solo aplica a documentos legacy sin montos.
+    """
+    breakdown = {
+        "rows": [], "subtotal": 0.0, "profit": 0.0, "indirect": 0.0,
+        "base": 0.0, "iva": 0.0, "total": 0.0, "has_breakdown": False
+    }
+    if not cb:
+        return breakdown
 
-    return {
+    # Importes por concepto: verbatim si el wizard los envió; si falta
+    # alguno (payload parcial), se calcula desde las tarifas crudas.
+    importes = {
+        "casetas": cb.casetas_importe if cb.casetas_importe is not None
+                   else _concept_importe(cb.casetas_amount, cb.casetas_unit, 0, fixed=True),
+        "operator": cb.operator_importe if cb.operator_importe is not None
+                    else _concept_importe(cb.operator_rate, cb.operator_unit, cb.operator_days, dias_periodo),
+        "per_diem": cb.per_diem_importe if cb.per_diem_importe is not None
+                    else _concept_importe(cb.per_diem_rate, cb.per_diem_unit, cb.per_diem_days, dias_periodo),
+        "gasoline": cb.gasoline_importe if cb.gasoline_importe is not None
+                    else _gasoline_importe(cb.gasoline_rate, cb.gasoline_unit, cb.gasoline_km),
+        "unit_rent": cb.unit_rent_importe if cb.unit_rent_importe is not None
+                     else _concept_importe(cb.unit_rent_amount, cb.unit_rent_unit, cb.unit_rent_qty, dias_periodo),
+    }
+    rows = _build_breakdown_rows(cb, importes, dias_periodo)
+
+    if cb.total_amount is not None and cb.subtotal_amount is not None:
+        # Modo desglose: montos finales del wizard, verbatim.
+        subtotal = cb.subtotal_amount
+        # Sanidad opcional (no corrige, no falla): el subtotal debe cuadrar
+        # con la suma de los *_importe que llegaron en el payload.
+        verbatim = [cb.casetas_importe, cb.operator_importe, cb.per_diem_importe,
+                    cb.gasoline_importe, cb.unit_rent_importe]
+        verbatim = [v for v in verbatim if v is not None]
+        if verbatim:
+            verbatim_sum = _round_money(sum(verbatim))
+            if abs(subtotal - verbatim_sum) > 0.01:
+                print(f"[cost_breakdown] discrepancia: subtotal_amount={subtotal} "
+                      f"!= suma *_importe={verbatim_sum}")
+    else:
+        # Fallback legacy: fórmula corregida (renta × qty, gasolina fija).
+        subtotal = _round_money(sum(importes.values()))
+
+    # Utilidad/indirectos: persistidos tal cual; recalcular solo si no existen.
+    profit = cb.profit_amount if cb.profit_amount is not None \
+        else _round_money(subtotal * (profit_pct or 8) / 100)
+    indirect = cb.indirect_amount if cb.indirect_amount is not None \
+        else _round_money(subtotal * (indirect_pct or 12) / 100)
+
+    base = cb.base_amount if cb.base_amount is not None \
+        else _round_money(subtotal + profit + indirect)
+    iva = cb.iva_amount if cb.iva_amount is not None \
+        else _round_money(base * 0.16)
+    total = cb.total_amount if cb.total_amount is not None \
+        else _round_money(base + iva)
+
+    breakdown.update({
         "rows": rows,
         "subtotal": subtotal,
-        "profit": profit_amount,
-        "indirect": indirect_amount,
+        "profit": profit,
+        "indirect": indirect,
+        "base": base,
         "iva": iva,
         "total": total,
         "has_breakdown": len(rows) > 0
-    }
+    })
+    return breakdown
 
 
 def build_pre_flight(pf, top_level_cargo: str):
@@ -186,10 +281,12 @@ async def create_invoice(request: Request, invoice_data: InvoiceData):
                 "snapshot_mode": True
             }
         else:
+            dias_periodo = compute_dias_periodo(invoice_data.request_day, invoice_data.delivery_day)
             breakdown = build_cost_breakdown(
                 invoice_data.cost_breakdown,
                 profit_pct=invoice_data.profit_pct or 8,
-                indirect_pct=invoice_data.indirect_pct or 12
+                indirect_pct=invoice_data.indirect_pct or 12,
+                dias_periodo=dias_periodo
             )
             breakdown["snapshot_mode"] = False
 

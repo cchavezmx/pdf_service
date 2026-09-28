@@ -219,7 +219,7 @@
               <tr><td class="label">Subtotal</td><td class="value">{{ fmt_money(breakdown.subtotal) }}</td></tr>
               <tr><td class="label">Utilidad {{ details.profit_pct or 8 }}%</td><td class="value">{{ fmt_money(breakdown.profit) }}</td></tr>
               <tr><td class="label">Indirectos {{ details.indirect_pct or 12 }}%</td><td class="value">{{ fmt_money(breakdown.indirect) }}</td></tr>
-              <tr><td class="label">IVA 16%</td><td class="value">{{ fmt_money(breakdown.iva) }}</td></tr>
+              <tr><td class="label">IVA 16%{% if breakdown.base %} (base {{ fmt_money(breakdown.base) }}){% endif %}</td><td class="value">{{ fmt_money(breakdown.iva) }}</td></tr>
               <tr><td class="label">Forma de pago</td><td class="value">{{ details.payment_method or '—' }}</td></tr>
             </table>
 

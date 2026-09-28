@@ -34,14 +34,33 @@ class CostBreakdown(BaseModel):
     per_diem_unit: Optional[str] = "dia"
     per_diem_days: Optional[int] = 0
     gasoline_rate: Optional[float] = 0
-    gasoline_unit: Optional[str] = "km"
+    # Antes era "km": alinear con el wizard (utils/costBreakdown.js) y la API,
+    # donde el default es monto fijo. Con "km" un doc legacy sin unidad
+    # multiplicaba gasoline_rate × gasoline_km informativo.
+    gasoline_unit: Optional[str] = "fijo"
     gasoline_km: Optional[float] = 0
     unit_rent_amount: Optional[float] = 0
     unit_rent_period: Optional[str] = "dia"
     unit_rent_unit: Optional[str] = "dia"
     unit_rent_qty: Optional[int] = 0
-    profit_amount: Optional[float] = 0
-    indirect_amount: Optional[float] = 0
+    # Sin default a 0: ausente (None) = documento legacy, distinto de $0.00
+    # válido. No uses "or" sobre estos campos en la lógica.
+    profit_amount: Optional[float] = None
+    indirect_amount: Optional[float] = None
+
+    # Importes finales calculados por el wizard y persistidos por la API
+    # (PR "feat(flotillas): persiste importes finales de cost_breakdown").
+    # Sin default: Pydantic descarta campos no declarados y la distinción
+    # presente/ausente es la que decide entre renderizar tal cual o fallback.
+    casetas_importe: Optional[float] = None
+    operator_importe: Optional[float] = None
+    per_diem_importe: Optional[float] = None
+    gasoline_importe: Optional[float] = None
+    unit_rent_importe: Optional[float] = None
+    subtotal_amount: Optional[float] = None
+    base_amount: Optional[float] = None
+    iva_amount: Optional[float] = None
+    total_amount: Optional[float] = None
 
 
 class LineItem(BaseModel):
